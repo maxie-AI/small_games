@@ -3,35 +3,98 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>贪吃蛇游戏</title>
+    <title>经典小游戏合集</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="game-container">
+    <div class="main-container">
         <div class="header">
-            <h1>🐍 贪吃蛇游戏</h1>
-            <div class="score-board">
+            <h1>🎮 经典小游戏合集</h1>
+            <p class="subtitle">选择您喜欢的游戏开始娱乐吧！</p>
+        </div>
+        
+        <div class="game-grid" id="gameGrid">
+            <div class="game-card" data-game="snake">
+                <div class="game-icon">🐍</div>
+                <h3>贪吃蛇</h3>
+                <p>经典的贪吃蛇游戏</p>
+            </div>
+            
+            <div class="game-card" data-game="tetris">
+                <div class="game-icon">🧩</div>
+                <h3>俄罗斯方块</h3>
+                <p>消除方块的益智游戏</p>
+            </div>
+            
+            <div class="game-card" data-game="flappybird">
+                <div class="game-icon">🐦</div>
+                <h3>飞翔小鸟</h3>
+                <p>点击屏幕让小鸟飞翔</p>
+            </div>
+            
+            <div class="game-card" data-game="breakout">
+                <div class="game-icon">🏓</div>
+                <h3>打砖块</h3>
+                <p>用球拍击球消除砖块</p>
+            </div>
+            
+            <div class="game-card" data-game="tank">
+                <div class="game-icon">🪖</div>
+                <h3>坦克大战</h3>
+                <p>射击对战游戏</p>
+            </div>
+            
+            <div class="game-card" data-game="memory">
+                <div class="game-icon">🧠</div>
+                <h3>记忆翻牌</h3>
+                <p>翻牌配对记忆游戏</p>
+            </div>
+            
+            <div class="game-card" data-game="crossy">
+                <div class="game-icon">🐔</div>
+                <h3>小鸡过马路</h3>
+                <p>躲避车辆安全过马路</p>
+            </div>
+            
+            <div class="game-card" data-game="2048">
+                <div class="game-icon">🔢</div>
+                <h3>2048</h3>
+                <p>合并数字达到2048</p>
+            </div>
+            
+            <div class="game-card" data-game="gomoku">
+                <div class="game-icon">⚫</div>
+                <h3>五子棋</h3>
+                <p>策略思维游戏</p>
+            </div>
+            
+            <div class="game-card" data-game="pokemon">
+                <div class="game-icon">⚡</div>
+                <h3>Pokemon识别</h3>
+                <p>猜出正确的Pokemon名字</p>
+            </div>
+        </div>
+        
+        <div class="back-button hidden" id="backButton">
+            <button class="btn btn-secondary">← 返回游戏选择</button>
+        </div>
+    </div>
+    
+    <!-- 游戏容器 -->
+    <div class="game-container hidden" id="gameContainer">
+        <div class="game-header">
+            <h2 id="gameTitle">游戏标题</h2>
+            <div class="game-info">
                 <div class="score">得分: <span id="score">0</span></div>
                 <div class="high-score">最高分: <span id="highScore">0</span></div>
             </div>
         </div>
         
-        <div class="game-controls">
-            <div class="difficulty-control">
-                <label for="difficulty">难度:</label>
-                <select id="difficulty">
-                    <option value="easy">简单</option>
-                    <option value="medium" selected>中等</option>
-                    <option value="hard">困难</option>
-                    <option value="expert">专家</option>
-                </select>
-            </div>
-            
-            <div class="game-buttons">
-                <button id="startBtn" class="btn btn-primary">开始游戏</button>
-                <button id="pauseBtn" class="btn btn-secondary" disabled>暂停</button>
-                <button id="resetBtn" class="btn btn-danger">重置</button>
-            </div>
+        <div class="game-controls" id="gameControls">
+            <button id="startBtn" class="btn btn-primary">开始游戏</button>
+            <button id="pauseBtn" class="btn btn-secondary" disabled>暂停</button>
+            <button id="resetBtn" class="btn btn-danger">重置</button>
+            <button id="backToMenuBtn" class="btn btn-warning" onclick="gameCollection.showGameSelection()">返回主页</button>
         </div>
         
         <div class="game-area">
@@ -39,11 +102,14 @@
             <div id="gameOver" class="game-over hidden">
                 <h2>游戏结束!</h2>
                 <p>最终得分: <span id="finalScore">0</span></p>
-                <button id="restartBtn" class="btn btn-primary">重新开始</button>
+                <div class="modal-buttons">
+                    <button id="restartBtn" class="btn btn-primary">重新开始</button>
+                    <button id="backToMenuBtn" class="btn btn-secondary" onclick="gameCollection.showGameSelection()">返回菜单</button>
+                </div>
             </div>
         </div>
         
-        <div class="mobile-controls">
+        <div class="mobile-controls" id="mobileControls">
             <div class="control-pad">
                 <button class="control-btn" id="upBtn">↑</button>
                 <div class="control-row">
@@ -54,14 +120,11 @@
             </div>
         </div>
         
-        <div class="instructions">
+        <div class="game-instructions" id="gameInstructions">
             <h3>游戏说明</h3>
-            <ul>
-                <li>使用方向键或点击控制按钮移动蛇</li>
-                <li>吃到食物可以增长身体和得分</li>
-                <li>避免撞到墙壁或自己的身体</li>
-                <li>选择不同难度体验不同的游戏速度</li>
-            </ul>
+            <div id="instructionContent">
+                <!-- 动态加载游戏说明 -->
+            </div>
         </div>
     </div>
     

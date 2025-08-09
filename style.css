@@ -12,8 +12,83 @@ body {
     justify-content: center;
     align-items: center;
     color: #333;
+    padding: 20px;
 }
 
+/* 主容器样式 */
+.main-container {
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 20px;
+    padding: 30px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+    text-align: center;
+    max-width: 1000px;
+    width: 100%;
+    margin: 20px;
+}
+
+.header {
+    margin-bottom: 30px;
+}
+
+.header h1 {
+    color: #4a5568;
+    font-size: 2.5em;
+    margin-bottom: 10px;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.subtitle {
+    color: #718096;
+    font-size: 1.1em;
+    margin-bottom: 20px;
+}
+
+/* 游戏网格样式 */
+.game-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+    margin-bottom: 30px;
+}
+
+.game-card {
+    background: linear-gradient(145deg, #f7fafc, #edf2f7);
+    border-radius: 15px;
+    padding: 25px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: 2px solid transparent;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.game-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+    border-color: #667eea;
+    background: linear-gradient(145deg, #ffffff, #f7fafc);
+}
+
+.game-icon {
+    font-size: 3em;
+    margin-bottom: 15px;
+    display: block;
+}
+
+.game-card h3 {
+    color: #2d3748;
+    font-size: 1.3em;
+    margin-bottom: 10px;
+    font-weight: bold;
+}
+
+.game-card p {
+    color: #718096;
+    font-size: 0.9em;
+    line-height: 1.4;
+}
+
+/* 游戏容器样式 */
 .game-container {
     background: rgba(255, 255, 255, 0.95);
     border-radius: 20px;
@@ -25,18 +100,18 @@ body {
     margin: 20px;
 }
 
-.header {
+.game-header {
     margin-bottom: 20px;
 }
 
-.header h1 {
+.game-header h2 {
     color: #4a5568;
-    font-size: 2.5em;
+    font-size: 2em;
     margin-bottom: 15px;
     text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-.score-board {
+.game-info {
     display: flex;
     justify-content: space-around;
     background: #f7fafc;
@@ -57,7 +132,7 @@ body {
 
 .game-controls {
     display: flex;
-    justify-content: space-between;
+    justify-content: center;
     align-items: center;
     margin-bottom: 20px;
     flex-wrap: wrap;
@@ -103,70 +178,68 @@ body {
     font-size: 14px;
     font-weight: bold;
     cursor: pointer;
-    transition: all 0.3s;
+    transition: all 0.3s ease;
     text-transform: uppercase;
     letter-spacing: 0.5px;
 }
 
-.btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-}
-
-.btn:active {
-    transform: translateY(0);
-}
-
 .btn-primary {
-    background: #48bb78;
+    background: linear-gradient(135deg, #667eea, #764ba2);
     color: white;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
 }
 
 .btn-primary:hover {
-    background: #38a169;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
 }
 
 .btn-secondary {
-    background: #ed8936;
+    background: linear-gradient(135deg, #718096, #4a5568);
     color: white;
+    box-shadow: 0 4px 15px rgba(113, 128, 150, 0.4);
 }
 
 .btn-secondary:hover {
-    background: #dd6b20;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(113, 128, 150, 0.6);
 }
 
 .btn-danger {
-    background: #e53e3e;
+    background: linear-gradient(135deg, #e53e3e, #c53030);
     color: white;
+    box-shadow: 0 4px 15px rgba(229, 62, 62, 0.4);
 }
 
 .btn-danger:hover {
-    background: #c53030;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(229, 62, 62, 0.6);
 }
 
 .btn:disabled {
-    background: #a0aec0;
+    opacity: 0.6;
     cursor: not-allowed;
     transform: none;
 }
 
 .btn:disabled:hover {
-    background: #a0aec0;
     transform: none;
     box-shadow: none;
 }
 
 .game-area {
     position: relative;
-    display: inline-block;
-    margin: 20px 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 20px;
 }
 
 #gameCanvas {
-    border: 4px solid #4a5568;
+    border: 3px solid #4a5568;
     border-radius: 10px;
     background: #2d3748;
-    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
 }
 
 .game-over {
@@ -177,9 +250,9 @@ body {
     background: rgba(255, 255, 255, 0.95);
     padding: 30px;
     border-radius: 15px;
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
     text-align: center;
-    min-width: 250px;
+    z-index: 10;
 }
 
 .game-over h2 {
@@ -189,25 +262,21 @@ body {
 }
 
 .game-over p {
+    color: #4a5568;
     margin-bottom: 20px;
     font-size: 1.2em;
-    color: #4a5568;
-}
-
-.hidden {
-    display: none;
 }
 
 .mobile-controls {
-    margin: 20px 0;
+    margin-bottom: 20px;
 }
 
 .control-pad {
     display: inline-block;
     background: #f7fafc;
-    padding: 20px;
+    padding: 15px;
     border-radius: 15px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
 }
 
 .control-row {
@@ -218,80 +287,144 @@ body {
 }
 
 .control-btn {
-    width: 60px;
-    height: 60px;
+    width: 50px;
+    height: 50px;
     border: none;
     border-radius: 10px;
-    background: #667eea;
+    background: linear-gradient(135deg, #667eea, #764ba2);
     color: white;
-    font-size: 24px;
+    font-size: 1.2em;
     font-weight: bold;
     cursor: pointer;
-    transition: all 0.3s;
-    user-select: none;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
 }
 
 .control-btn:hover {
-    background: #5a67d8;
-    transform: scale(1.05);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
 }
 
 .control-btn:active {
-    background: #4c51bf;
-    transform: scale(0.95);
+    transform: translateY(0);
+    box-shadow: 0 2px 10px rgba(102, 126, 234, 0.4);
 }
 
-.instructions {
+.game-instructions {
     background: #f7fafc;
     padding: 20px;
     border-radius: 10px;
-    margin-top: 20px;
     text-align: left;
 }
 
-.instructions h3 {
+.game-instructions h3 {
     color: #4a5568;
     margin-bottom: 15px;
     text-align: center;
+    font-size: 1.3em;
 }
 
-.instructions ul {
+.game-instructions ul {
     list-style: none;
-    padding-left: 0;
+    padding: 0;
 }
 
-.instructions li {
-    padding: 8px 0;
-    color: #2d3748;
+.game-instructions li {
+    color: #718096;
+    margin-bottom: 8px;
+    padding-left: 20px;
     position: relative;
-    padding-left: 25px;
 }
 
-.instructions li:before {
-    content: "🎮";
+.game-instructions li:before {
+    content: "•";
+    color: #667eea;
+    font-weight: bold;
     position: absolute;
     left: 0;
-    top: 8px;
+}
+
+.back-button {
+    margin-top: 20px;
+}
+
+.hidden {
+    display: none;
+}
+
+/* 弹窗样式 */
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.modal-content {
+    background: white;
+    padding: 2rem;
+    border-radius: 10px;
+    text-align: center;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    max-width: 400px;
+    width: 90%;
+}
+
+.modal h2 {
+    color: #2d3748;
+    margin-bottom: 1rem;
+}
+
+.modal p {
+    color: #4a5568;
+    margin-bottom: 1.5rem;
+    font-size: 1.1rem;
+}
+
+.modal-buttons {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.modal-buttons .btn {
+    flex: 1;
+    min-width: 120px;
 }
 
 /* 响应式设计 */
 @media (max-width: 768px) {
-    .game-container {
+    body {
+        padding: 10px;
+    }
+    
+    .main-container, .game-container {
         padding: 20px;
         margin: 10px;
     }
     
-    .header h1 {
+    .header h1, .game-header h2 {
         font-size: 2em;
     }
     
-    .game-controls {
-        flex-direction: column;
-        align-items: center;
+    .game-grid {
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 15px;
     }
     
-    .game-buttons {
-        justify-content: center;
+    .game-card {
+        padding: 20px;
+    }
+    
+    .game-icon {
+        font-size: 2.5em;
     }
     
     #gameCanvas {
@@ -300,47 +433,67 @@ body {
         height: auto;
     }
     
-    .control-btn {
-        width: 50px;
-        height: 50px;
-        font-size: 20px;
-    }
-}
-
-@media (max-width: 480px) {
-    .score-board {
+    .game-info {
         flex-direction: column;
         gap: 10px;
     }
     
-    .btn {
-        padding: 8px 16px;
-        font-size: 12px;
+    .game-controls {
+        flex-direction: column;
     }
     
     .control-btn {
         width: 45px;
         height: 45px;
-        font-size: 18px;
+        font-size: 1em;
+    }
+}
+
+@media (max-width: 480px) {
+    .game-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+    
+    .game-card {
+        padding: 15px;
+    }
+    
+    .game-icon {
+        font-size: 2em;
+    }
+    
+    .game-card h3 {
+        font-size: 1.1em;
+    }
+    
+    .game-card p {
+        font-size: 0.8em;
     }
 }
 
 /* 动画效果 */
-@keyframes pulse {
-    0% { transform: scale(1); }
-    50% { transform: scale(1.05); }
-    100% { transform: scale(1); }
-}
-
-.btn-primary:not(:disabled):hover {
-    animation: pulse 0.6s infinite;
-}
-
 @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(-20px); }
-    to { opacity: 1; transform: translateY(0); }
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
-.game-over:not(.hidden) {
-    animation: fadeIn 0.5s ease-out;
+.game-card {
+    animation: fadeIn 0.6s ease-out;
 }
+
+.game-card:nth-child(1) { animation-delay: 0.1s; }
+.game-card:nth-child(2) { animation-delay: 0.2s; }
+.game-card:nth-child(3) { animation-delay: 0.3s; }
+.game-card:nth-child(4) { animation-delay: 0.4s; }
+.game-card:nth-child(5) { animation-delay: 0.5s; }
+.game-card:nth-child(6) { animation-delay: 0.6s; }
+.game-card:nth-child(7) { animation-delay: 0.7s; }
+.game-card:nth-child(8) { animation-delay: 0.8s; }
+.game-card:nth-child(9) { animation-delay: 0.9s; }
+.game-card:nth-child(10) { animation-delay: 1.0s; }
