@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>贪吃蛇游戏</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="game-container">
+        <div class="header">
+            <h1>🐍 贪吃蛇游戏</h1>
+            <div class="score-board">
+                <div class="score">得分: <span id="score">0</span></div>
+                <div class="high-score">最高分: <span id="highScore">0</span></div>
+            </div>
+        </div>
+        
+        <div class="game-controls">
+            <div class="difficulty-control">
+                <label for="difficulty">难度:</label>
+                <select id="difficulty">
+                    <option value="easy">简单</option>
+                    <option value="medium" selected>中等</option>
+                    <option value="hard">困难</option>
+                    <option value="expert">专家</option>
+                </select>
+            </div>
+            
+            <div class="game-buttons">
+                <button id="startBtn" class="btn btn-primary">开始游戏</button>
+                <button id="pauseBtn" class="btn btn-secondary" disabled>暂停</button>
+                <button id="resetBtn" class="btn btn-danger">重置</button>
+            </div>
+        </div>
+        
+        <div class="game-area">
+            <canvas id="gameCanvas" width="400" height="400"></canvas>
+            <div id="gameOver" class="game-over hidden">
+                <h2>游戏结束!</h2>
+                <p>最终得分: <span id="finalScore">0</span></p>
+                <button id="restartBtn" class="btn btn-primary">重新开始</button>
+            </div>
+        </div>
+        
+        <div class="mobile-controls">
+            <div class="control-pad">
+                <button class="control-btn" id="upBtn">↑</button>
+                <div class="control-row">
+                    <button class="control-btn" id="leftBtn">←</button>
+                    <button class="control-btn" id="downBtn">↓</button>
+                    <button class="control-btn" id="rightBtn">→</button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="instructions">
+            <h3>游戏说明</h3>
+            <ul>
+                <li>使用方向键或点击控制按钮移动蛇</li>
+                <li>吃到食物可以增长身体和得分</li>
+                <li>避免撞到墙壁或自己的身体</li>
+                <li>选择不同难度体验不同的游戏速度</li>
+            </ul>
+        </div>
+    </div>
+    
+    <script src="script.js"></script>
+</body>
+</html>
