@@ -66,10 +66,17 @@ class GameCollection {
         });
 
         document.getElementById('rightBtn').addEventListener('click', () => {
-            if (this.currentGame && this.currentGame.handleInput) {
-                this.currentGame.handleInput('right');
-            }
-        });
+                if (this.currentGame && this.currentGame.handleInput) {
+                    this.currentGame.handleInput('right');
+                }
+            });
+            
+            // 添加开火按键事件监听器
+            document.getElementById('fireBtn').addEventListener('click', () => {
+                if (this.currentGame && this.currentGame.handleInput) {
+                    this.currentGame.handleInput('fire');
+                }
+            });
 
         // 键盘事件
         document.addEventListener('keydown', (e) => {
@@ -141,9 +148,14 @@ class GameCollection {
                 }
             }
 
-            // 对于某些游戏，点击也是有效输入
+            // 对于某些游戏，点击也是有效输入 - 修复移动端触控定位
             if (this.currentGame && this.currentGame.handleClick) {
-                this.currentGame.handleClick(endX, endY);
+                const rect = this.canvas.getBoundingClientRect();
+                const scaleX = this.canvas.width / rect.width;
+                const scaleY = this.canvas.height / rect.height;
+                const canvasX = (endX - rect.left) * scaleX;
+                const canvasY = (endY - rect.top) * scaleY;
+                this.currentGame.handleClick(canvasX, canvasY);
             }
 
             startX = null;
@@ -242,6 +254,14 @@ class GameCollection {
         // 显示/隐藏移动控制
           const needsDirectionalControls = ['snake', 'crossy', 'breakout', 'tank'].includes(gameType);
           document.getElementById('mobileControls').style.display = needsDirectionalControls ? 'block' : 'none';
+          
+          // 显示/隐藏开火按键（仅坦克游戏需要）
+          const fireBtn = document.getElementById('fireBtn');
+          if (gameType === 'tank') {
+              fireBtn.style.display = 'block';
+          } else {
+              fireBtn.style.display = 'none';
+          }
     }
 
     updateScore(score, highScore) {
@@ -750,7 +770,7 @@ class FlappyBirdGame extends BaseGame {
         super(canvas, ctx);
         this.bird = { x: 50, y: 200, velocity: 0, size: 24 };
         this.pipes = [];
-        this.gravity = 0.25;  // 降低重力
+        this.gravity = 0.125;  // 降低重力到原来的一半
         this.jumpStrength = -5.5;  // 降低跳跃强度
         this.pipeWidth = 50;
         this.pipeGap = 150;  // 增大管道间隙
@@ -1495,6 +1515,9 @@ class TankGame extends BaseGame {
             case 'right':
                 this.playerTank.direction = 1;
                 this.playerTank.x = Math.min(this.canvas.width - this.playerTank.width, this.playerTank.x + speed);
+                break;
+            case 'fire':
+                this.shoot();
                 break;
         }
         this.draw();
