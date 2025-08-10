@@ -851,8 +851,8 @@ class FlappyBirdGame extends BaseGame {
         super(canvas, ctx);
         this.bird = { x: 50, y: 200, velocity: 0, size: 24 };
         this.pipes = [];
-        this.gravity = 0.02;  // 再次减半：从0.04降到0.02
-        this.jumpStrength = -0.875;  // 再次减半：从-1.75降到-0.875
+        this.gravity = 0.04;  // 恢复原始重力值
+        this.jumpStrength = -1.75;  // 恢复原始跳跃强度
         this.pipeWidth = 50;
         this.pipeGap = 180;  // 进一步增大管道间隙
         this.pipeSpeed = 0.8;  // 初始速度更慢
@@ -864,8 +864,6 @@ class FlappyBirdGame extends BaseGame {
         this.maxPipeSpawnRate = 0.025;  // 最大管道生成率
         this.spawnRateIncrement = 0.00005;  // 减半：从0.0001降到0.00005
         this.distance = 0;  // 飞行距离
-        this.gravityStartTime = 0;  // 重力开始时间
-        this.isGravityActive = true;  // 重力是否激活
     }
 
     init() {
@@ -874,8 +872,6 @@ class FlappyBirdGame extends BaseGame {
         this.bird = { x: 50, y: 200, velocity: 0, size: 24 };
         this.pipes = [];
         this.distance = 0;
-        this.gravityStartTime = Date.now();
-        this.isGravityActive = true;
         
         // 添加初始障碍物
         const gapY = Math.random() * (this.canvas.height - this.pipeGap - 100) + 50;
@@ -899,21 +895,8 @@ class FlappyBirdGame extends BaseGame {
     update() {
         if (!this.isRunning || this.isPaused) return;
 
-        // 计算非线性重力减少（1秒内从正常值减到0）
-        const currentTime = Date.now();
-        const timeSinceGravityStart = (currentTime - this.gravityStartTime) / 1000; // 转换为秒
-        let currentGravity = this.gravity;
-        
-        if (this.isGravityActive && timeSinceGravityStart < 1) {
-            // 非线性减少：使用平方根函数使重力快速减少
-            const gravityFactor = Math.max(0, 1 - Math.sqrt(timeSinceGravityStart));
-            currentGravity = this.gravity * gravityFactor;
-        } else if (timeSinceGravityStart >= 1) {
-            currentGravity = 0; // 1秒后重力为0
-        }
-
         // 更新小鸟
-        this.bird.velocity += currentGravity;
+        this.bird.velocity += this.gravity;
         this.bird.y += this.bird.velocity;
         
         // 更新飞行距离
