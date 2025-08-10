@@ -99,6 +99,16 @@
         
         <div class="game-area">
             <canvas id="gameCanvas" width="400" height="400"></canvas>
+            <div id="tetrisInfo" class="tetris-info hidden">
+                <div class="tetris-preview">
+                    <h4>下一个:</h4>
+                    <canvas id="previewCanvas" width="60" height="60"></canvas>
+                </div>
+                <div class="tetris-stats">
+                    <div>行数: <span id="linesCount">0</span></div>
+                    <div>速度: <span id="speedLevel">1</span></div>
+                </div>
+            </div>
             <div id="gameOver" class="game-over hidden">
                 <h2>游戏结束!</h2>
                 <p>最终得分: <span id="finalScore">0</span></p>
@@ -112,9 +122,15 @@
         <div class="mobile-controls" id="mobileControls">
             <div class="control-pad">
                 <div class="control-row">
+                    <button class="control-btn" id="upBtn">↑</button>
+                </div>
+                <div class="control-row">
                     <button class="control-btn" id="leftBtn">←</button>
                     <button class="control-btn" id="fireBtn" style="display: none; background: #ff4444;">🔥 开火</button>
                     <button class="control-btn" id="rightBtn">→</button>
+                </div>
+                <div class="control-row">
+                    <button class="control-btn" id="downBtn">↓</button>
                 </div>
             </div>
         </div>

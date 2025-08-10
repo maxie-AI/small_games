@@ -8,6 +8,8 @@ class GameCollection {
         this.init();
     }
 
+
+
     init() {
         this.canvas = document.getElementById('gameCanvas');
         this.ctx = this.canvas.getContext('2d');
@@ -47,6 +49,17 @@ class GameCollection {
         });
 
         // 移动端控制
+        document.getElementById('upBtn').addEventListener('click', () => {
+            if (this.currentGame && this.currentGame.handleInput) {
+                this.currentGame.handleInput('up');
+            }
+        });
+
+        document.getElementById('downBtn').addEventListener('click', () => {
+            if (this.currentGame && this.currentGame.handleInput) {
+                this.currentGame.handleInput('down');
+            }
+        });
 
         document.getElementById('leftBtn').addEventListener('click', () => {
             if (this.currentGame && this.currentGame.handleInput) {
@@ -549,6 +562,9 @@ class TetrisGame extends BaseGame {
         this.grid = [];
         this.currentPiece = null;
         this.nextPiece = null;
+        this.dropSpeed = 500; // 初始下降速度（毫秒）
+        this.minDropSpeed = 100; // 最小下降速度
+        this.linesCleared = 0; // 已清除的行数
         this.pieces = [
             { shape: [[1,1,1,1]], color: '#00f0f0' }, // I
             { shape: [[1,1],[1,1]], color: '#f0f000' }, // O
@@ -561,12 +577,26 @@ class TetrisGame extends BaseGame {
     }
 
     init() {
-        this.canvas.width = this.gridWidth * this.cellSize;
+        this.canvas.width = this.gridWidth * this.cellSize; // 移除额外宽度
         this.canvas.height = this.gridHeight * this.cellSize;
         this.grid = Array(this.gridHeight).fill().map(() => Array(this.gridWidth).fill(0));
         this.currentPiece = this.createPiece();
         this.nextPiece = this.createPiece();
+        this.dropSpeed = 500;
+        this.linesCleared = 0;
+        
+        // 显示俄罗斯方块信息区域
+        const tetrisInfo = document.getElementById('tetrisInfo');
+        if (tetrisInfo) {
+            tetrisInfo.classList.remove('hidden');
+        }
+        
+        // 初始化预览canvas
+        this.previewCanvas = document.getElementById('previewCanvas');
+        this.previewCtx = this.previewCanvas ? this.previewCanvas.getContext('2d') : null;
+        
         this.draw();
+        this.updateGameInfo();
     }
 
     createPiece() {
@@ -580,10 +610,17 @@ class TetrisGame extends BaseGame {
     }
 
     startGameLoop() {
+        this.updateGameLoop();
+    }
+
+    updateGameLoop() {
+        if (this.gameLoop) {
+            clearInterval(this.gameLoop);
+        }
         this.gameLoop = setInterval(() => {
             this.update();
             this.draw();
-        }, 800);
+        }, this.dropSpeed);
     }
 
     update() {
@@ -646,7 +683,15 @@ class TetrisGame extends BaseGame {
             }
         }
         if (linesCleared > 0) {
+            this.linesCleared += linesCleared;
             this.updateScore(linesCleared * 100);
+            
+            // 每次得分速度加快10%
+            const newSpeed = Math.max(this.minDropSpeed, this.dropSpeed * 0.9);
+            if (newSpeed !== this.dropSpeed) {
+                this.dropSpeed = newSpeed;
+                this.updateGameLoop(); // 更新游戏循环速度
+            }
         }
     }
 
@@ -694,6 +739,9 @@ class TetrisGame extends BaseGame {
                 }
             }
         }
+
+        // 更新预览和统计信息（移到HTML元素中）
+        this.updateGameInfo();
     }
 
     handleInput(direction) {
@@ -720,6 +768,50 @@ class TetrisGame extends BaseGame {
                 break;
         }
         this.draw();
+    }
+
+    updateGameInfo() {
+        // 更新统计信息
+        const linesCount = document.getElementById('linesCount');
+        const speedLevel = document.getElementById('speedLevel');
+        
+        if (linesCount) {
+            linesCount.textContent = this.linesCleared;
+        }
+        if (speedLevel) {
+            speedLevel.textContent = Math.round((600 - this.dropSpeed) / 5);
+        }
+        
+        // 更新预览canvas
+        if (this.previewCtx && this.nextPiece) {
+            this.previewCtx.clearRect(0, 0, 60, 60);
+            
+            // 计算居中位置
+            const offsetX = (60 - this.nextPiece.shape[0].length * 12) / 2;
+            const offsetY = (60 - this.nextPiece.shape.length * 12) / 2;
+            
+            this.previewCtx.fillStyle = this.nextPiece.color;
+            for (let y = 0; y < this.nextPiece.shape.length; y++) {
+                for (let x = 0; x < this.nextPiece.shape[y].length; x++) {
+                    if (this.nextPiece.shape[y][x]) {
+                        this.previewCtx.fillRect(
+                            offsetX + x * 12,
+                            offsetY + y * 12,
+                            11, 11
+                        );
+                    }
+                }
+            }
+        }
+    }
+
+    stop() {
+        super.stop();
+        // 隐藏俄罗斯方块信息区域
+        const tetrisInfo = document.getElementById('tetrisInfo');
+        if (tetrisInfo) {
+            tetrisInfo.classList.add('hidden');
+        }
     }
 
     handleKeyPress(e) {
@@ -759,11 +851,21 @@ class FlappyBirdGame extends BaseGame {
         super(canvas, ctx);
         this.bird = { x: 50, y: 200, velocity: 0, size: 24 };
         this.pipes = [];
-        this.gravity = 0.125;  // 降低重力到原来的一半
-        this.jumpStrength = -5.5;  // 降低跳跃强度
+        this.gravity = 0.02;  // 再次减半：从0.04降到0.02
+        this.jumpStrength = -0.875;  // 再次减半：从-1.75降到-0.875
         this.pipeWidth = 50;
-        this.pipeGap = 150;  // 增大管道间隙
-        this.pipeSpeed = 1.5;  // 降低管道移动速度
+        this.pipeGap = 180;  // 进一步增大管道间隙
+        this.pipeSpeed = 0.8;  // 初始速度更慢
+        this.baseSpeed = 0.8;  // 基础速度
+        this.maxSpeed = 3.0;   // 最大速度
+        this.speedIncrement = 0.01;  // 减半：从0.02降到0.01
+        this.pipeSpawnRate = 0.008;  // 初始管道生成率（更稀疏）
+        this.basePipeSpawnRate = 0.008;
+        this.maxPipeSpawnRate = 0.025;  // 最大管道生成率
+        this.spawnRateIncrement = 0.00005;  // 减半：从0.0001降到0.00005
+        this.distance = 0;  // 飞行距离
+        this.gravityStartTime = 0;  // 重力开始时间
+        this.isGravityActive = true;  // 重力是否激活
     }
 
     init() {
@@ -771,6 +873,19 @@ class FlappyBirdGame extends BaseGame {
         this.canvas.height = 400;
         this.bird = { x: 50, y: 200, velocity: 0, size: 24 };
         this.pipes = [];
+        this.distance = 0;
+        this.gravityStartTime = Date.now();
+        this.isGravityActive = true;
+        
+        // 添加初始障碍物
+        const gapY = Math.random() * (this.canvas.height - this.pipeGap - 100) + 50;
+        this.pipes.push({
+            x: this.canvas.width - 100,
+            topHeight: gapY,
+            bottomY: gapY + this.pipeGap,
+            passed: false
+        });
+        
         this.draw();
     }
 
@@ -784,9 +899,25 @@ class FlappyBirdGame extends BaseGame {
     update() {
         if (!this.isRunning || this.isPaused) return;
 
+        // 计算非线性重力减少（1秒内从正常值减到0）
+        const currentTime = Date.now();
+        const timeSinceGravityStart = (currentTime - this.gravityStartTime) / 1000; // 转换为秒
+        let currentGravity = this.gravity;
+        
+        if (this.isGravityActive && timeSinceGravityStart < 1) {
+            // 非线性减少：使用平方根函数使重力快速减少
+            const gravityFactor = Math.max(0, 1 - Math.sqrt(timeSinceGravityStart));
+            currentGravity = this.gravity * gravityFactor;
+        } else if (timeSinceGravityStart >= 1) {
+            currentGravity = 0; // 1秒后重力为0
+        }
+
         // 更新小鸟
-        this.bird.velocity += this.gravity;
+        this.bird.velocity += currentGravity;
         this.bird.y += this.bird.velocity;
+        
+        // 更新飞行距离
+        this.distance += this.pipeSpeed;
 
         // 检查边界碰撞
         if (this.bird.y <= 0 || this.bird.y >= this.canvas.height - this.bird.size) {
@@ -794,15 +925,22 @@ class FlappyBirdGame extends BaseGame {
             return;
         }
 
-        // 生成管道
-        if (this.pipes.length === 0 || this.pipes[this.pipes.length - 1].x < this.canvas.width - 200) {
-            const gapY = Math.random() * (this.canvas.height - this.pipeGap - 100) + 50;
-            this.pipes.push({
-                x: this.canvas.width,
-                topHeight: gapY,
-                bottomY: gapY + this.pipeGap,
-                passed: false
-            });
+        // 根据分数逐渐增加速度和管道生成率
+        const speedProgress = Math.min(this.score / 50, 1); // 50分达到最大速度
+        this.pipeSpeed = this.baseSpeed + (this.maxSpeed - this.baseSpeed) * speedProgress;
+        this.pipeSpawnRate = this.basePipeSpawnRate + (this.maxPipeSpawnRate - this.basePipeSpawnRate) * speedProgress;
+
+        // 生成管道（使用动态生成率）
+        if (Math.random() < this.pipeSpawnRate) {
+            if (this.pipes.length === 0 || this.pipes[this.pipes.length - 1].x < this.canvas.width - 150) {
+                const gapY = Math.random() * (this.canvas.height - this.pipeGap - 100) + 50;
+                this.pipes.push({
+                    x: this.canvas.width,
+                    topHeight: gapY,
+                    bottomY: gapY + this.pipeGap,
+                    passed: false
+                });
+            }
         }
 
         // 更新管道
@@ -851,6 +989,11 @@ class FlappyBirdGame extends BaseGame {
 
         // 绘制卡通小鸟
         this.drawBird(this.bird.x, this.bird.y, this.bird.size);
+        
+        // 显示飞行距离
+        this.ctx.fillStyle = '#000000';
+        this.ctx.font = '16px Arial';
+        this.ctx.fillText(`距离: ${Math.floor(this.distance)}m`, 10, 30);
     }
     
     drawBird(x, y, size) {
@@ -1247,7 +1390,7 @@ class TankGame extends BaseGame {
         const walls = [];
         // 生成一些随机墙壁
         for (let i = 0; i < 15; i++) {
-            const isBreakable = Math.random() < 0.3; // 30%概率生成可破坏墙壁
+            const isBreakable = Math.random() < 0.5; // 50%概率生成可破坏墙壁
             walls.push({
                 x: Math.random() * (this.canvas.width - 40),
                 y: Math.random() * (this.canvas.height - 100) + 50,
@@ -1443,10 +1586,20 @@ class TankGame extends BaseGame {
         // 绘制墙壁
         this.walls.forEach(wall => {
             if (wall.isBreakable) {
-                // 可破坏墙壁根据被击中次数改变颜色
+                // 可破坏墙壁 - 使用条纹效果
                 const alpha = 1 - (wall.hits / wall.maxHits) * 0.6;
-                this.ctx.fillStyle = `rgba(139, 69, 19, ${alpha})`; // 棕色，透明度递减
+                this.ctx.fillStyle = `rgba(139, 69, 19, ${alpha})`; // 棕色背景
                 this.ctx.fillRect(wall.x, wall.y, wall.width, wall.height);
+                
+                // 添加条纹效果
+                this.ctx.strokeStyle = `rgba(101, 67, 33, ${alpha})`; // 深棕色条纹
+                this.ctx.lineWidth = 2;
+                this.ctx.beginPath();
+                for (let i = 0; i < wall.width; i += 4) {
+                    this.ctx.moveTo(wall.x + i, wall.y);
+                    this.ctx.lineTo(wall.x + i, wall.y + wall.height);
+                }
+                this.ctx.stroke();
                 
                 // 添加裂纹效果
                 if (wall.hits > 0) {
@@ -1460,7 +1613,7 @@ class TankGame extends BaseGame {
                     this.ctx.stroke();
                 }
             } else {
-                // 普通墙壁
+                // 普通墙壁 - 实心填充
                 this.ctx.fillStyle = '#8B4513';
                 this.ctx.fillRect(wall.x, wall.y, wall.width, wall.height);
             }
@@ -1489,23 +1642,41 @@ class TankGame extends BaseGame {
     handleInput(direction) {
         const speed = 3;
         switch (direction) {
+            case 'up':
+                this.playerTank.y = Math.max(0, this.playerTank.y - speed);
+                break;
+            case 'down':
+                this.playerTank.y = Math.min(this.canvas.height - this.playerTank.height, this.playerTank.y + speed);
+                break;
             case 'left':
-                this.playerTank.direction = 3;
                 this.playerTank.x = Math.max(0, this.playerTank.x - speed);
                 break;
             case 'right':
-                this.playerTank.direction = 1;
                 this.playerTank.x = Math.min(this.canvas.width - this.playerTank.width, this.playerTank.x + speed);
                 break;
             case 'fire':
                 this.shoot();
                 break;
         }
+        // 保持炮口向上
+        this.playerTank.direction = 0;
         this.draw();
     }
 
     handleKeyPress(e) {
         switch (e.key) {
+            case 'ArrowUp':
+            case 'w':
+            case 'W':
+                e.preventDefault();
+                this.handleInput('up');
+                break;
+            case 'ArrowDown':
+            case 's':
+            case 'S':
+                e.preventDefault();
+                this.handleInput('down');
+                break;
             case 'ArrowLeft':
             case 'a':
             case 'A':
@@ -2385,6 +2556,13 @@ class CrossyRoadGame extends BaseGame {
         this.roads = [];
         this.safeZones = [];
         this.gameSpeed = 2;
+        this.isWaitingToRestart = false;
+        this.waitStartTime = 0;
+        this.waitDuration = 1000; // 1秒等待时间
+        this.crossedSuccessfully = false;
+        this.level = 1; // 关卡等级
+        this.baseDensity = 0.35; // 基础车辆生成密度
+        this.baseSpeed = [1.2, 2.0, 2.8, 3.5, 1.5, 2.5, 3.2]; // 基础速度
     }
 
     init() {
@@ -2394,19 +2572,70 @@ class CrossyRoadGame extends BaseGame {
         this.cars = [];
         this.roads = this.generateRoads();
         this.safeZones = this.generateSafeZones();
+        this.isWaitingToRestart = false;
+        this.crossedSuccessfully = false;
+        this.level = 1; // 重置关卡等级
+        
+        // 为每条车道生成初始车辆（至少3辆）
+        this.generateInitialCars();
+        
         this.draw();
     }
     
     generateRoads() {
         const roads = [];
+        const roadColors = ['#333333', '#444444', '#555555', '#666666'];
+        // 根据关卡等级调整速度，每关增加20%
+        const speedMultiplier = 1 + (this.level - 1) * 0.2;
+        
         for (let i = 1; i < 8; i++) {
             roads.push({
                 y: i * 50,
                 direction: i % 2 === 0 ? 1 : -1,
-                speed: 1 + Math.random() * 2
+                speed: (this.baseSpeed[i - 1] || 2.0) * speedMultiplier,
+                color: roadColors[i % roadColors.length]
             });
         }
         return roads;
+    }
+    
+    generateInitialCars() {
+        const carColors = ['#ff4444', '#44ff44', '#4444ff', '#ffff44', '#ff44ff', '#44ffff'];
+        
+        // 为每条车道生成3-5辆初始车辆，但只在道路上，不在安全区域
+        this.roads.forEach(road => {
+            const carY = road.y + 10;
+            let isInSafeZone = false;
+            
+            // 检查道路是否与安全区域重叠
+            for (let safeZone of this.safeZones) {
+                if (carY >= safeZone.y && carY <= safeZone.y + safeZone.height) {
+                    isInSafeZone = true;
+                    break;
+                }
+            }
+            
+            // 只有不在安全区域的道路才生成车辆
+            if (!isInSafeZone) {
+                const carCount = 3 + Math.floor(Math.random() * 3); // 3-5辆车
+                
+                for (let i = 0; i < carCount; i++) {
+                    const spacing = this.canvas.width / carCount;
+                    const baseX = road.direction > 0 ? 
+                        i * spacing - 100 : // 从左边开始，向右移动
+                        this.canvas.width - i * spacing + 100; // 从右边开始，向左移动
+                    
+                    this.cars.push({
+                        x: baseX + Math.random() * 50 - 25, // 添加一些随机偏移
+                        y: carY,
+                        width: 40,
+                        height: 20,
+                        speed: road.speed * road.direction,
+                        color: carColors[Math.floor(Math.random() * carColors.length)]
+                    });
+                }
+            }
+        });
     }
     
     generateSafeZones() {
@@ -2423,16 +2652,68 @@ class CrossyRoadGame extends BaseGame {
     update() {
         if (!this.isRunning || this.isPaused) return;
         
-        // 生成汽车
-        if (Math.random() < 0.02) {
+        // 处理等待重置状态
+        if (this.isWaitingToRestart) {
+            if (Date.now() - this.waitStartTime >= this.waitDuration) {
+                // 重置小鸡位置到起始点
+                this.chicken.x = 200;
+                this.chicken.y = 350;
+                this.cars = []; // 清空所有车辆
+                this.isWaitingToRestart = false;
+                this.crossedSuccessfully = false;
+            }
+            return; // 等待期间不更新游戏逻辑
+        }
+        
+        // 检查是否成功穿越到顶部
+        if (this.chicken.y <= 10 && !this.crossedSuccessfully) {
+            this.crossedSuccessfully = true;
+            this.updateScore(10); // 成功穿越得分
+            this.level++; // 增加关卡等级
+            this.roads = this.generateRoads(); // 重新生成道路以应用新速度
+            this.isWaitingToRestart = true;
+            this.waitStartTime = Date.now();
+            return;
+        }
+        
+        // 生成汽车（根据道路的不同速度生成不同颜色的车）
+        // 确保车辆只在道路上生成，不在安全区域生成
+        // 根据关卡等级调整车辆密度，每关增加10%
+        const currentDensity = this.baseDensity * (1 + (this.level - 1) * 0.1);
+        if (Math.random() < currentDensity) {
             const road = this.roads[Math.floor(Math.random() * this.roads.length)];
-            this.cars.push({
-                x: road.direction > 0 ? -30 : this.canvas.width + 30,
-                y: road.y + 10,
-                width: 40,
-                height: 20,
-                speed: road.speed * road.direction
-            });
+            const carColors = ['#ff4444', '#44ff44', '#4444ff', '#ffff44', '#ff44ff', '#44ffff'];
+            let carSpeed = road.speed;
+            
+            // 偶尔生成高速车辆（5%概率）
+            if (Math.random() < 0.05) {
+                carSpeed = road.speed * 3; // 高速车辆是正常速度的3倍
+            }
+            
+            // 确保车辆只在黑色道路区域生成，不在绿色安全区域
+            // 检查车辆Y坐标是否在道路范围内
+            const carY = road.y + 10;
+            let isInSafeZone = false;
+            
+            // 检查是否与安全区域重叠
+            for (let safeZone of this.safeZones) {
+                if (carY >= safeZone.y && carY <= safeZone.y + safeZone.height) {
+                    isInSafeZone = true;
+                    break;
+                }
+            }
+            
+            // 只有不在安全区域时才生成车辆
+            if (!isInSafeZone) {
+                this.cars.push({
+                    x: road.direction > 0 ? -30 : this.canvas.width + 30,
+                    y: carY,
+                    width: 40,
+                    height: 20,
+                    speed: carSpeed * road.direction,
+                    color: carColors[Math.floor(Math.random() * carColors.length)]
+                });
+            }
         }
         
         // 更新汽车位置
@@ -2452,39 +2733,109 @@ class CrossyRoadGame extends BaseGame {
             }
         }
         
-        // 检查是否到达顶部
-        if (this.chicken.y <= 0) {
-            this.updateScore(100);
-            this.chicken.y = 350;
-        }
     }
     
     draw() {
-        // 清空画布
-        this.ctx.fillStyle = '#90EE90';
+        // 清空画布 - 草地背景
+        this.ctx.fillStyle = '#228B22';
         this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
         
-        // 绘制道路
-        this.ctx.fillStyle = '#696969';
-        this.roads.forEach(road => {
+        // 绘制道路（使用不同颜色和纹理）
+        this.roads.forEach((road, index) => {
+            // 道路背景
+            this.ctx.fillStyle = road.color;
             this.ctx.fillRect(0, road.y, this.canvas.width, 40);
+            
+            // 道路中心线
+            this.ctx.fillStyle = '#FFFF00';
+            this.ctx.fillRect(0, road.y + 18, this.canvas.width, 4);
+            
+            // 道路边缘线
+            this.ctx.fillStyle = '#FFFFFF';
+            this.ctx.fillRect(0, road.y, this.canvas.width, 2);
+            this.ctx.fillRect(0, road.y + 38, this.canvas.width, 2);
         });
         
-        // 绘制安全区域
-        this.ctx.fillStyle = '#90EE90';
+        // 绘制安全区域（更明亮的绿色）
+        this.ctx.fillStyle = '#32CD32';
         this.safeZones.forEach(zone => {
             this.ctx.fillRect(0, zone.y, this.canvas.width, zone.height);
+            
+            // 添加草地纹理
+            this.ctx.fillStyle = '#228B22';
+            for (let i = 0; i < this.canvas.width; i += 20) {
+                for (let j = 0; j < zone.height; j += 10) {
+                    if (Math.random() > 0.7) {
+                        this.ctx.fillRect(i + zone.y % 10, zone.y + j, 2, 2);
+                    }
+                }
+            }
         });
         
-        // 绘制汽车
-        this.ctx.fillStyle = '#FF0000';
+        // 绘制汽车（更生动的车辆设计）
         this.cars.forEach(car => {
+            // 车身
+            this.ctx.fillStyle = car.color;
             this.ctx.fillRect(car.x, car.y, car.width, car.height);
+            
+            // 车窗
+            this.ctx.fillStyle = '#87CEEB';
+            this.ctx.fillRect(car.x + 5, car.y + 3, car.width - 10, car.height - 6);
+            
+            // 车轮
+            this.ctx.fillStyle = '#000000';
+            this.ctx.fillRect(car.x + 3, car.y + car.height - 2, 6, 4);
+            this.ctx.fillRect(car.x + car.width - 9, car.y + car.height - 2, 6, 4);
+            
+            // 车灯（根据方向显示）
+            this.ctx.fillStyle = car.speed > 0 ? '#FFFF00' : '#FF0000';
+            if (car.speed > 0) {
+                this.ctx.fillRect(car.x + car.width - 2, car.y + 2, 2, 4);
+                this.ctx.fillRect(car.x + car.width - 2, car.y + car.height - 6, 2, 4);
+            } else {
+                this.ctx.fillRect(car.x, car.y + 2, 2, 4);
+                this.ctx.fillRect(car.x, car.y + car.height - 6, 2, 4);
+            }
         });
         
-        // 绘制小鸡
+        // 绘制小鸡（更可爱的设计）
+        const chickenX = this.chicken.x;
+        const chickenY = this.chicken.y;
+        const size = this.chicken.size;
+        
+        // 小鸡身体
         this.ctx.fillStyle = '#FFFF00';
-        this.ctx.fillRect(this.chicken.x, this.chicken.y, this.chicken.size, this.chicken.size);
+        this.ctx.fillRect(chickenX + 2, chickenY + 4, size - 4, size - 8);
+        
+        // 小鸡头部
+        this.ctx.fillStyle = '#FFFF00';
+        this.ctx.fillRect(chickenX + 4, chickenY, size - 8, size - 4);
+        
+        // 小鸡眼睛
+        this.ctx.fillStyle = '#000000';
+        this.ctx.fillRect(chickenX + 6, chickenY + 2, 2, 2);
+        this.ctx.fillRect(chickenX + size - 8, chickenY + 2, 2, 2);
+        
+        // 小鸡嘴巴
+        this.ctx.fillStyle = '#FF8C00';
+        this.ctx.fillRect(chickenX + size/2 - 1, chickenY + 6, 2, 2);
+        
+        // 小鸡脚
+        this.ctx.fillStyle = '#FF8C00';
+        this.ctx.fillRect(chickenX + 4, chickenY + size - 2, 3, 2);
+        this.ctx.fillRect(chickenX + size - 7, chickenY + size - 2, 3, 2);
+        
+        // 显示等待状态提示
+        if (this.isWaitingToRestart) {
+            this.ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+            this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+            
+            this.ctx.fillStyle = '#FFFFFF';
+            this.ctx.font = '24px Arial';
+            this.ctx.textAlign = 'center';
+            this.ctx.fillText('成功穿越！', this.canvas.width / 2, this.canvas.height / 2 - 20);
+            this.ctx.fillText('准备下一轮...', this.canvas.width / 2, this.canvas.height / 2 + 20);
+        }
     }
     
     handleInput(direction) {
@@ -2493,23 +2844,23 @@ class CrossyRoadGame extends BaseGame {
         switch (direction) {
             case 'up':
                 if (this.chicken.y > 0) {
-                    this.chicken.y -= 50;
+                    this.chicken.y -= 25; // 降低移动速度，与最慢车速0.5相当
                     this.updateScore(10);
                 }
                 break;
             case 'down':
                 if (this.chicken.y < this.canvas.height - this.chicken.size) {
-                    this.chicken.y += 50;
+                    this.chicken.y += 25; // 降低移动速度
                 }
                 break;
             case 'left':
                 if (this.chicken.x > 0) {
-                    this.chicken.x -= 25;
+                    this.chicken.x -= 12; // 降低左右移动速度
                 }
                 break;
             case 'right':
                 if (this.chicken.x < this.canvas.width - this.chicken.size) {
-                    this.chicken.x += 25;
+                    this.chicken.x += 12; // 降低左右移动速度
                 }
                 break;
         }
