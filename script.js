@@ -47,11 +47,6 @@ class GameCollection {
         });
 
         // 移动端控制
-        document.getElementById('upBtn').addEventListener('click', () => {
-            if (this.currentGame && this.currentGame.handleInput) {
-                this.currentGame.handleInput('up');
-            }
-        });
 
         document.getElementById('downBtn').addEventListener('click', () => {
             if (this.currentGame && this.currentGame.handleInput) {
@@ -1500,10 +1495,6 @@ class TankGame extends BaseGame {
     handleInput(direction) {
         const speed = 3;
         switch (direction) {
-            case 'up':
-                this.playerTank.direction = 0;
-                this.playerTank.y = Math.max(0, this.playerTank.y - speed);
-                break;
             case 'down':
                 this.playerTank.direction = 2;
                 this.playerTank.y = Math.min(this.canvas.height - this.playerTank.height, this.playerTank.y + speed);
@@ -1525,12 +1516,6 @@ class TankGame extends BaseGame {
 
     handleKeyPress(e) {
         switch (e.key) {
-            case 'ArrowUp':
-            case 'w':
-            case 'W':
-                e.preventDefault();
-                this.handleInput('up');
-                break;
             case 'ArrowDown':
             case 's':
             case 'S':
