@@ -1,0 +1,72 @@
+<svg width="800" height="600" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <style>
+      .title { font-family: Arial, sans-serif; font-size: 32px; font-weight: bold; text-anchor: middle; }
+      .subtitle { font-family: Arial, sans-serif; font-size: 16px; text-anchor: middle; fill: #666; }
+      .game-card { fill: #f8f9fa; stroke: #e9ecef; stroke-width: 2; rx: 12; ry: 12; }
+      .game-icon { font-size: 48px; text-anchor: middle; }
+      .game-title { font-family: Arial, sans-serif; font-size: 18px; font-weight: bold; text-anchor: middle; }
+      .game-desc { font-family: Arial, sans-serif; font-size: 14px; text-anchor: middle; fill: #666; }
+    </style>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="800" height="600" fill="#ffffff"/>
+  
+  <!-- Header -->
+  <text x="400" y="50" class="title">🎮 经典小游戏合集</text>
+  <text x="400" y="80" class="subtitle">选择您喜欢的游戏开始娱乐吧！</text>
+  
+  <!-- Game Cards Row 1 -->
+  <rect x="50" y="120" width="150" height="120" class="game-card"/>
+  <text x="125" y="160" class="game-icon">🐍</text>
+  <text x="125" y="190" class="game-title">贪吃蛇</text>
+  <text x="125" y="210" class="game-desc">经典的贪吃蛇游戏</text>
+  
+  <rect x="220" y="120" width="150" height="120" class="game-card"/>
+  <text x="295" y="160" class="game-icon">🧩</text>
+  <text x="295" y="190" class="game-title">俄罗斯方块</text>
+  <text x="295" y="210" class="game-desc">消除方块的益智游戏</text>
+  
+  <rect x="390" y="120" width="150" height="120" class="game-card"/>
+  <text x="465" y="160" class="game-icon">🐦</text>
+  <text x="465" y="190" class="game-title">飞翔小鸟</text>
+  <text x="465" y="210" class="game-desc">点击屏幕让小鸟飞翔</text>
+  
+  <rect x="560" y="120" width="150" height="120" class="game-card"/>
+  <text x="635" y="160" class="game-icon">🏓</text>
+  <text x="635" y="190" class="game-title">打砖块</text>
+  <text x="635" y="210" class="game-desc">用球击打砖块消除砖块</text>
+  
+  <!-- Game Cards Row 2 -->
+  <rect x="50" y="260" width="150" height="120" class="game-card"/>
+  <text x="125" y="300" class="game-icon">💥</text>
+  <text x="125" y="330" class="game-title">坦克大战</text>
+  <text x="125" y="350" class="game-desc">射击对战游戏</text>
+  
+  <rect x="220" y="260" width="150" height="120" class="game-card"/>
+  <text x="295" y="300" class="game-icon">🧠</text>
+  <text x="295" y="330" class="game-title">记忆翻牌</text>
+  <text x="295" y="350" class="game-desc">翻牌配对记忆游戏</text>
+  
+  <rect x="390" y="260" width="150" height="120" class="game-card"/>
+  <text x="465" y="300" class="game-icon">🐔</text>
+  <text x="465" y="330" class="game-title">小鸡过马路</text>
+  <text x="465" y="350" class="game-desc">躲避车辆安全过马路</text>
+  
+  <rect x="560" y="260" width="150" height="120" class="game-card"/>
+  <text x="635" y="300" class="game-icon">🦘</text>
+  <text x="635" y="330" class="game-title">Doodle Jump</text>
+  <text x="635" y="350" class="game-desc">跳跃平台向上攀登</text>
+  
+  <!-- Game Cards Row 3 -->
+  <rect x="135" y="400" width="150" height="120" class="game-card"/>
+  <text x="210" y="440" class="game-icon">⚫</text>
+  <text x="210" y="470" class="game-title">五子棋</text>
+  <text x="210" y="490" class="game-desc">策略思维游戏</text>
+  
+  <rect x="305" y="400" width="150" height="120" class="game-card"/>
+  <text x="380" y="440" class="game-icon">⚡</text>
+  <text x="380" y="470" class="game-title">Pokemon识别</text>
+  <text x="380" y="490" class="game-desc">猜出正确的Pokemon名字</text>
+</svg>
