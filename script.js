@@ -207,7 +207,7 @@ class GameCollection {
             case 'tank': return new TankGame(this.canvas, this.ctx);
             case 'memory': return new MemoryGame(this.canvas, this.ctx);
             case 'crossy': return new CrossyRoadGame(this.canvas, this.ctx);
-            case '2048': return new Game2048(this.canvas, this.ctx);
+            case '2048': return new DoodleJumpGame(this.canvas, this.ctx);
             case 'gomoku': return new GomokuGame(this.canvas, this.ctx);
             case 'pokemon': return new PokemonGame(this.canvas, this.ctx);
             default: return null;
@@ -223,7 +223,7 @@ class GameCollection {
               'tank': '🪖 坦克大战',
               'memory': '🧠 记忆翻牌',
               'crossy': '🐔 小鸡过马路',
-              '2048': '🔢 2048',
+              '2048': '🦘 Doodle Jump',
               'gomoku': '⚫ 五子棋',
               'pokemon': '⚡ Pokemon识别'
           };
@@ -236,7 +236,7 @@ class GameCollection {
               'tank': ['使用方向键控制坦克移动', '按空格键发射子弹', '击毁敌方坦克获得分数'],
               'memory': ['点击卡片翻开', '记住卡片位置', '配对所有卡片获胜'],
               'crossy': ['使用方向键控制小鸡移动', '躲避来往车辆', '安全过马路获得分数'],
-              '2048': ['滑动合并相同数字', '达到2048获胜', '无法移动时游戏结束'],
+              '2048': ['使用方向键或点击屏幕左右移动', '自动跳跃到平台上', '爬得越高分数越高'],
               'gomoku': ['点击棋盘放置棋子', '五个连线获胜', '与电脑对战'],
               'pokemon': ['观察Pokemon图片', '从四个选项中选择正确名字', '三次错误游戏结束']
           };
@@ -2872,276 +2872,224 @@ class CrossyRoadGame extends BaseGame {
     }
 }
 
-class Game2048 extends BaseGame {
+class DoodleJumpGame extends BaseGame {
     constructor(canvas, ctx) {
         super(canvas, ctx);
-        this.gridSize = 4;
-        this.cellSize = 80;
-        this.grid = [];
-        this.moved = false;
+        this.player = {
+            x: 200,
+            y: 300,
+            width: 20,
+            height: 20,
+            velocityX: 0,
+            velocityY: 0,
+            onGround: false
+        };
+        this.platforms = [];
+        this.gravity = 0.4;
+        this.jumpStrength = -12;
+        this.moveSpeed = 5;
+        this.cameraY = 0;
+        this.maxHeight = 0;
+        this.platformSpacing = 80;
+        this.platformWidth = 60;
+        this.platformHeight = 10;
     }
 
     init() {
         this.canvas.width = 400;
-        this.canvas.height = 400;
-        this.grid = Array(this.gridSize).fill().map(() => Array(this.gridSize).fill(0));
-        this.addRandomTile();
-        this.addRandomTile();
+        this.canvas.height = 600;
+        this.player.x = this.canvas.width / 2 - this.player.width / 2;
+        this.player.y = this.canvas.height - 100;
+        this.player.velocityX = 0;
+        this.player.velocityY = 0;
+        this.player.onGround = false;
+        this.cameraY = 0;
+        this.maxHeight = 0;
+        this.platforms = [];
+        this.generateInitialPlatforms();
         this.draw();
     }
     
+    generateInitialPlatforms() {
+        // 生成初始平台
+        for (let i = 0; i < 15; i++) {
+            this.platforms.push({
+                x: Math.random() * (this.canvas.width - this.platformWidth),
+                y: this.canvas.height - 50 - i * this.platformSpacing,
+                width: this.platformWidth,
+                height: this.platformHeight,
+                type: 'normal'
+            });
+        }
+        
+        // 添加起始平台
+        this.platforms.push({
+            x: this.canvas.width / 2 - this.platformWidth / 2,
+            y: this.canvas.height - 30,
+            width: this.platformWidth,
+            height: this.platformHeight,
+            type: 'normal'
+        });
+    }
+    
+    generateNewPlatforms() {
+        // 当玩家上升时生成新平台
+        let highestPlatform = Math.min(...this.platforms.map(p => p.y));
+        const targetHeight = this.cameraY - 200;
+        
+        while (highestPlatform > targetHeight) {
+            const newPlatformY = highestPlatform - this.platformSpacing;
+            this.platforms.push({
+                x: Math.random() * (this.canvas.width - this.platformWidth),
+                y: newPlatformY,
+                width: this.platformWidth,
+                height: this.platformHeight,
+                type: Math.random() < 0.1 ? 'bouncy' : 'normal'
+            });
+            highestPlatform = newPlatformY; // 更新最高平台位置
+        }
+        
+        // 清理过低的平台
+        this.platforms = this.platforms.filter(p => p.y < this.cameraY + this.canvas.height + 100);
+    }
+    
     startGameLoop() {
-        // 2048不需要持续的游戏循环，只在移动时更新
+        this.gameLoop = setInterval(() => {
+            this.update();
+            this.draw();
+        }, 1000 / 60);
         this.isRunning = true;
     }
     
-    addRandomTile() {
-        const emptyCells = [];
-        for (let i = 0; i < this.gridSize; i++) {
-            for (let j = 0; j < this.gridSize; j++) {
-                if (this.grid[i][j] === 0) {
-                    emptyCells.push({row: i, col: j});
+    update() {
+        if (!this.isRunning) return;
+        
+        // 水平移动
+        this.player.x += this.player.velocityX;
+        
+        // 边界检查（屏幕环绕）
+        if (this.player.x < -this.player.width) {
+            this.player.x = this.canvas.width;
+        } else if (this.player.x > this.canvas.width) {
+            this.player.x = -this.player.width;
+        }
+        
+        // 重力
+        this.player.velocityY += this.gravity;
+        this.player.y += this.player.velocityY;
+        
+        // 平台碰撞检测
+        this.player.onGround = false;
+        for (let platform of this.platforms) {
+            if (this.player.velocityY > 0 && // 只在下降时检测
+                this.player.x < platform.x + platform.width &&
+                this.player.x + this.player.width > platform.x &&
+                this.player.y + this.player.height > platform.y &&
+                this.player.y + this.player.height < platform.y + platform.height + 10) {
+                
+                this.player.y = platform.y - this.player.height;
+                this.player.onGround = true;
+                
+                if (platform.type === 'bouncy') {
+                    this.player.velocityY = this.jumpStrength * 1.5;
+                } else {
+                    this.player.velocityY = this.jumpStrength;
                 }
+                
+                // 计分
+                const height = Math.max(0, -(this.player.y - (this.canvas.height - 100)));
+                if (height > this.maxHeight) {
+                    this.updateScore(Math.floor((height - this.maxHeight) / 10));
+                    this.maxHeight = height;
+                }
+                break;
             }
         }
         
-        if (emptyCells.length > 0) {
-            const randomCell = emptyCells[Math.floor(Math.random() * emptyCells.length)];
-            this.grid[randomCell.row][randomCell.col] = Math.random() < 0.9 ? 2 : 4;
+        // 相机跟随
+        const targetCameraY = this.player.y - this.canvas.height * 0.7;
+        if (targetCameraY < this.cameraY) {
+            this.cameraY = targetCameraY;
         }
+        
+        // 生成新平台
+        this.generateNewPlatforms();
+        
+        // 游戏结束检测
+        if (this.player.y > this.cameraY + this.canvas.height + 100) {
+            this.gameOver();
+        }
+        
+        // 减少水平速度（摩擦力）
+        this.player.velocityX *= 0.8;
     }
-    
-    update() {}
     
     draw() {
-        // 清空画布
-        this.ctx.fillStyle = '#bbada0';
+        // 清空画布（天空背景）
+        const gradient = this.ctx.createLinearGradient(0, 0, 0, this.canvas.height);
+        gradient.addColorStop(0, '#87CEEB');
+        gradient.addColorStop(1, '#98FB98');
+        this.ctx.fillStyle = gradient;
         this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
         
-        // 绘制网格
-        for (let i = 0; i < this.gridSize; i++) {
-            for (let j = 0; j < this.gridSize; j++) {
-                const x = j * (this.cellSize + 10) + 20;
-                const y = i * (this.cellSize + 10) + 20;
-                
-                // 绘制单元格背景
-                this.ctx.fillStyle = '#cdc1b4';
-                this.ctx.fillRect(x, y, this.cellSize, this.cellSize);
-                
-                // 绘制数字
-                const value = this.grid[i][j];
-                if (value > 0) {
-                    this.ctx.fillStyle = this.getTileColor(value);
-                    this.ctx.fillRect(x, y, this.cellSize, this.cellSize);
-                    
-                    this.ctx.fillStyle = value <= 4 ? '#776e65' : '#f9f6f2';
-                    this.ctx.font = 'bold 24px Arial';
-                    this.ctx.textAlign = 'center';
-                    this.ctx.fillText(value.toString(), x + this.cellSize/2, y + this.cellSize/2 + 8);
+        // 保存上下文
+        this.ctx.save();
+        
+        // 应用相机变换
+        this.ctx.translate(0, -this.cameraY);
+        
+        // 绘制平台
+        for (let platform of this.platforms) {
+            if (platform.y > this.cameraY - 50 && platform.y < this.cameraY + this.canvas.height + 50) {
+                if (platform.type === 'bouncy') {
+                    this.ctx.fillStyle = '#FF6B6B';
+                } else {
+                    this.ctx.fillStyle = '#4ECDC4';
                 }
+                this.ctx.fillRect(platform.x, platform.y, platform.width, platform.height);
+                
+                // 平台边框
+                this.ctx.strokeStyle = '#2C3E50';
+                this.ctx.lineWidth = 2;
+                this.ctx.strokeRect(platform.x, platform.y, platform.width, platform.height);
             }
         }
-    }
-    
-    getTileColor(value) {
-        const colors = {
-            2: '#eee4da',
-            4: '#ede0c8',
-            8: '#f2b179',
-            16: '#f59563',
-            32: '#f67c5f',
-            64: '#f65e3b',
-            128: '#edcf72',
-            256: '#edcc61',
-            512: '#edc850',
-            1024: '#edc53f',
-            2048: '#edc22e'
-        };
-        return colors[value] || '#3c3a32';
+        
+        // 绘制玩家
+        this.ctx.fillStyle = '#FFD93D';
+        this.ctx.fillRect(this.player.x, this.player.y, this.player.width, this.player.height);
+        
+        // 玩家边框
+        this.ctx.strokeStyle = '#2C3E50';
+        this.ctx.lineWidth = 2;
+        this.ctx.strokeRect(this.player.x, this.player.y, this.player.width, this.player.height);
+        
+        // 玩家眼睛
+        this.ctx.fillStyle = '#2C3E50';
+        this.ctx.fillRect(this.player.x + 4, this.player.y + 4, 3, 3);
+        this.ctx.fillRect(this.player.x + 13, this.player.y + 4, 3, 3);
+        
+        // 恢复上下文
+        this.ctx.restore();
+        
+        // 绘制高度信息
+        this.ctx.fillStyle = '#2C3E50';
+        this.ctx.font = '16px Arial';
+        this.ctx.textAlign = 'left';
+        this.ctx.fillText(`高度: ${Math.floor(this.maxHeight)}m`, 10, 30);
     }
     
     handleInput(direction) {
         if (!this.isRunning) return;
         
-        this.moved = false;
-        const previousGrid = this.grid.map(row => [...row]);
-        
         switch (direction) {
             case 'left':
-                this.moveLeft();
+                this.player.velocityX = -this.moveSpeed;
                 break;
             case 'right':
-                this.moveRight();
-                break;
-            case 'up':
-                this.moveUp();
-                break;
-            case 'down':
-                this.moveDown();
+                this.player.velocityX = this.moveSpeed;
                 break;
         }
-        
-        if (this.moved) {
-            this.addRandomTile();
-            this.draw();
-            
-            if (this.checkWin()) {
-                setTimeout(() => {
-                    alert('恭喜！你达到了2048！');
-                    this.gameOver();
-                }, 100);
-            } else if (this.checkGameOver()) {
-                setTimeout(() => {
-                    alert('游戏结束！');
-                    this.gameOver();
-                }, 100);
-            }
-        }
-    }
-    
-    moveLeft() {
-        for (let i = 0; i < this.gridSize; i++) {
-            const row = this.grid[i].filter(val => val !== 0);
-            for (let j = 0; j < row.length - 1; j++) {
-                if (row[j] === row[j + 1]) {
-                    row[j] *= 2;
-                    this.updateScore(row[j]);
-                    row[j + 1] = 0;
-                }
-            }
-            const newRow = row.filter(val => val !== 0);
-            while (newRow.length < this.gridSize) {
-                newRow.push(0);
-            }
-            
-            for (let j = 0; j < this.gridSize; j++) {
-                if (this.grid[i][j] !== newRow[j]) {
-                    this.moved = true;
-                }
-                this.grid[i][j] = newRow[j];
-            }
-        }
-    }
-    
-    moveRight() {
-        for (let i = 0; i < this.gridSize; i++) {
-            const row = this.grid[i].filter(val => val !== 0);
-            for (let j = row.length - 1; j > 0; j--) {
-                if (row[j] === row[j - 1]) {
-                    row[j] *= 2;
-                    this.updateScore(row[j]);
-                    row[j - 1] = 0;
-                }
-            }
-            const newRow = row.filter(val => val !== 0);
-            while (newRow.length < this.gridSize) {
-                newRow.unshift(0);
-            }
-            
-            for (let j = 0; j < this.gridSize; j++) {
-                if (this.grid[i][j] !== newRow[j]) {
-                    this.moved = true;
-                }
-                this.grid[i][j] = newRow[j];
-            }
-        }
-    }
-    
-    moveUp() {
-        for (let j = 0; j < this.gridSize; j++) {
-            const col = [];
-            for (let i = 0; i < this.gridSize; i++) {
-                if (this.grid[i][j] !== 0) {
-                    col.push(this.grid[i][j]);
-                }
-            }
-            
-            for (let i = 0; i < col.length - 1; i++) {
-                if (col[i] === col[i + 1]) {
-                    col[i] *= 2;
-                    this.updateScore(col[i]);
-                    col[i + 1] = 0;
-                }
-            }
-            
-            const newCol = col.filter(val => val !== 0);
-            while (newCol.length < this.gridSize) {
-                newCol.push(0);
-            }
-            
-            for (let i = 0; i < this.gridSize; i++) {
-                if (this.grid[i][j] !== newCol[i]) {
-                    this.moved = true;
-                }
-                this.grid[i][j] = newCol[i];
-            }
-        }
-    }
-    
-    moveDown() {
-        for (let j = 0; j < this.gridSize; j++) {
-            const col = [];
-            for (let i = 0; i < this.gridSize; i++) {
-                if (this.grid[i][j] !== 0) {
-                    col.push(this.grid[i][j]);
-                }
-            }
-            
-            for (let i = col.length - 1; i > 0; i--) {
-                if (col[i] === col[i - 1]) {
-                    col[i] *= 2;
-                    this.updateScore(col[i]);
-                    col[i - 1] = 0;
-                }
-            }
-            
-            const newCol = col.filter(val => val !== 0);
-            while (newCol.length < this.gridSize) {
-                newCol.unshift(0);
-            }
-            
-            for (let i = 0; i < this.gridSize; i++) {
-                if (this.grid[i][j] !== newCol[i]) {
-                    this.moved = true;
-                }
-                this.grid[i][j] = newCol[i];
-            }
-        }
-    }
-    
-    checkWin() {
-        for (let i = 0; i < this.gridSize; i++) {
-            for (let j = 0; j < this.gridSize; j++) {
-                if (this.grid[i][j] === 2048) {
-                    return true;
-                }
-            }
-        }
-        return false;
-    }
-    
-    checkGameOver() {
-        // 检查是否有空格
-        for (let i = 0; i < this.gridSize; i++) {
-            for (let j = 0; j < this.gridSize; j++) {
-                if (this.grid[i][j] === 0) {
-                    return false;
-                }
-            }
-        }
-        
-        // 检查是否可以合并
-        for (let i = 0; i < this.gridSize; i++) {
-            for (let j = 0; j < this.gridSize; j++) {
-                const current = this.grid[i][j];
-                if ((i < this.gridSize - 1 && this.grid[i + 1][j] === current) ||
-                    (j < this.gridSize - 1 && this.grid[i][j + 1] === current)) {
-                    return false;
-                }
-            }
-        }
-        
-        return true;
     }
     
     handleKeyPress(e) {
@@ -3149,49 +3097,40 @@ class Game2048 extends BaseGame {
         
         switch (e.key) {
             case 'ArrowLeft':
+            case 'a':
+            case 'A':
                 e.preventDefault();
                 this.handleInput('left');
                 break;
             case 'ArrowRight':
+            case 'd':
+            case 'D':
                 e.preventDefault();
                 this.handleInput('right');
-                break;
-            case 'ArrowUp':
-                e.preventDefault();
-                this.handleInput('up');
-                break;
-            case 'ArrowDown':
-                e.preventDefault();
-                this.handleInput('down');
                 break;
         }
     }
     
     handleClick(x, y) {
-        // 点击控制2048游戏移动
         if (!this.isRunning) return;
         
-        const centerX = this.canvas.width / 2;
-        const centerY = this.canvas.height / 2;
-        
-        const deltaX = x - centerX;
-        const deltaY = y - centerY;
-        
-        if (Math.abs(deltaX) > Math.abs(deltaY)) {
-            // 水平移动
-            if (deltaX > 0) {
-                this.handleInput('right');
-            } else {
-                this.handleInput('left');
-            }
+        // 点击左半边向左移动，右半边向右移动
+        if (x < this.canvas.width / 2) {
+            this.handleInput('left');
         } else {
-            // 垂直移动
-            if (deltaY > 0) {
-                this.handleInput('down');
-            } else {
-                this.handleInput('up');
-            }
+            this.handleInput('right');
         }
+    }
+    
+    stop() {
+        this.isRunning = false;
+        this.isPaused = false;
+        if (this.gameLoop) {
+            clearInterval(this.gameLoop);
+            this.gameLoop = null;
+        }
+        document.getElementById('startBtn').disabled = false;
+        document.getElementById('pauseBtn').disabled = true;
     }
 }
 
